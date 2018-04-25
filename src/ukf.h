@@ -24,11 +24,11 @@ public:
 
   ///* state vector: [pos1 pos2 vel_abs yaw_angle yaw_rate] in SI units and rad
   VectorXd x_;
-  x_ = VectorXd(5);
+  //x_ = VectorXd(5);
 
   ///* state covariance matrix
   MatrixXd P_;
-  P_ = MatrixXd(5, 5);
+  //P_ = MatrixXd(5, 5);
 
   ///* predicted sigma points matrix
   MatrixXd Xsig_pred_;
@@ -106,6 +106,8 @@ public:
    * matrix
    * @param delta_t Time between k and k+1 in s
    */
+
+
   void Prediction(double delta_t);
 
   /**
