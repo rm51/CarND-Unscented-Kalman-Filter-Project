@@ -21,11 +21,22 @@ UKF::UKF() {
   // if this is false, radar measurements will be ignored (except during init)
   use_radar_ = true;
 
+
+
+    // set state dimension
+    n_x_ = 5;
+
   // initial state vector
-  x_ = VectorXd(5);
+   x_ = VectorXd(n_x_);
+
+    // define spreading parameter
+    lambda = 3 - n_aug_;
+
+
 
   // initial covariance matrix
   P_ = MatrixXd(5, 5);
+
 
   time_us_ =0;
 
@@ -36,7 +47,9 @@ UKF::UKF() {
 
   // Process noise standard deviation yaw acceleration in rad/s^2
   std_yawdd_ = 30;
-  
+
+
+   // Change these back to their original values
   //DO NOT MODIFY measurement noise values below these are provided by the sensor manufacturer.
   // Laser measurement noise standard deviation position1 in m
   std_laspx_ = 0.15;
@@ -53,14 +66,7 @@ UKF::UKF() {
   // Radar measurement noise standard deviation radius change in m/s
   std_radrd_ = 0.3;
   //DO NOT MODIFY measurement noise values above these are provided by the sensor manufacturer.
-  
-  /**
-  TODO:
 
-  Complete the initialization. See ukf.h for other member properties.
-
-  Hint: one or more values initialized above might be wildly off...
-  */
 }
 
 UKF::~UKF() {}
@@ -137,6 +143,8 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     UpdateRadar(meas_package);
   }
   time_us_ = meas_package.timestamp_;
+
+    cout << "after process measurement";
 }
 
 /**
@@ -156,12 +164,18 @@ void UKF::Prediction(double delta_t) {
 
   // Lesson 7, section 18: Augmentation Assignment 2
 
-  // create augmented mean state
+
 
   // create example matrix with predicted sigma points
 
-  MatrixXd Xsig_pred = MatrixXd(n_x_, 2 *n_aug_+1);
 
+     // move into separate method void UKF::GenerateSigmaPoints(MatrixXd* Xsig_out)
+     // = augmented state
+  // Xsig_pred = Xsig_aug
+
+    // create sigman point matrix
+    MatrixXd Xsig_pred = MatrixXd(n_x_, 2 *n_aug_+1);
+    // maybe need to change these values, create different values for each method
     Xsig_pred <<
               5.9374,  6.0640,   5.925,  5.9436,  5.9266,  5.9374,  5.9389,  5.9374,  5.8106,  5.9457,  5.9310,  5.9465,  5.9374,  5.9359,  5.93744,
             1.48,  1.4436,   1.660,  1.4934,  1.5036,    1.48,  1.4868,    1.48,  1.5271,  1.3104,  1.4787,  1.4674,    1.48,  1.4851,    1.486,
@@ -169,6 +183,7 @@ void UKF::Prediction(double delta_t) {
             0.5367, 0.47338, 0.67809, 0.55455, 0.64364, 0.54337,  0.5367, 0.53851, 0.60017, 0.39546, 0.51900, 0.42991, 0.530188,  0.5367, 0.535048,
             0.352, 0.29997, 0.46212, 0.37633,  0.4841, 0.41872,   0.352, 0.38744, 0.40562, 0.24347, 0.32926,  0.2214, 0.28687,   0.352, 0.318159;
 
+    // create augmented mean state
   x_aug.head(5) = x_;
   x_aug(5) = 0;
   x_aug(6) = 0;
@@ -186,11 +201,15 @@ void UKF::Prediction(double delta_t) {
   Xsig_aug.col(0) = x_aug;
   for (int i = 0; i < n_aug_; i++)
   {
-    Xsig_aug.col(i+1)      = x_aug + sqrt(lambda_+n_aug_) * L.col(i);
-    Xsig_aug.col(i+1+n_aug_)  = x_aug - sqrt(lambda_+n_aug_) * L.col(i);
+    Xsig_aug.col(i+1)      = x_aug + sqrt(lambda+n_aug_) * L.col(i);
+    Xsig_aug.col(i+1+n_aug_)  = x_aug - sqrt(lambda+n_aug_) * L.col(i);
   }
 
-  // Predit Sigma Points
+    // end void UKF::GenerateSigmaPoints(MatrixXd* Xsig_out)
+
+
+    // move into separate method  void UKF::SigmaPointPrediction(MatrixXd* Xsig_out)
+  // Predict Sigma Points
 
   // Lesson 7, section 21 Sigma Point Prediction Assignment 2
 
@@ -236,14 +255,18 @@ void UKF::Prediction(double delta_t) {
     Xsig_pred(4,i) = yawd_p;
     }
 
+    // end sigma point prediction void UKF::SigmaPointPrediction(MatrixXd* Xsig_out)
+
+
+    // Move into new method void UKF::PredictMeanAndCovariance(VectorXd* x_out, MatrixXd* P_out)
     // Predict mean and covariance
 
     // Lesson 8, 24
     // set weights
-    double weight_0 = lambda_/(lambda_+n_aug_);
+    double weight_0 = lambda/(lambda+n_aug_);
     weights(0) = weight_0;
     for (int i=1; i < 2*n_aug_+1; i++){ //2n+1 weights
-      double weight = 0.5/(n_aug_+lambda_);
+      double weight = 0.5/(n_aug_+lambda);
       weights(i) = weight;
     }
 
@@ -264,6 +287,10 @@ void UKF::Prediction(double delta_t) {
 
       P_ = P_ + weights(i) * x_diff * x_diff.transpose();
     }
+
+    // end void UKF::PredictMeanAndCovariance(VectorXd* x_out, MatrixXd* P_out)
+
+    cout << "after prediction";
 }
 
 /**
@@ -296,6 +323,8 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
         return;
 
     }
+
+    cout << "update lidar";
 }
 
 /**
@@ -320,6 +349,8 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 
 
   // Lesson 8 part 27
+  // move into two separate methods
+  //  void UKF::PredictRadarMeasurement(VectorXd* z_out, MatrixXd* S_out)
   //create example matrix with predicted sigma points
   MatrixXd Xsig_pred = MatrixXd(n_x_, 2 * n_aug_ + 1);
     Xsig_pred <<
@@ -332,7 +363,7 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
     //create matrix for sigma points in measurement space
     MatrixXd Zsig = MatrixXd(n_z_, 2 * n_aug_ + 1);
 
-    for (int i = 0; i < 2 * n_aug_ +1; i++) { // 2n+1 sigma points
+     for (int i = 0; i < 2 * n_aug_ +1; i++) { // 2n+1 sigma points
 
      // extract values for better readibility
      double p_x = Xsig_pred(0,i);
@@ -353,10 +384,10 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   VectorXd z_pred = VectorXd(n_z_);
   z_pred.fill(0.0);
 
-  // where should this closing bracket be?
+
   for (int i=0; i < 2*n_aug_+1; i++) {
       z_pred = z_pred + weights(i) * Zsig.col(i);
-
+  }
 
       // measurement covariance matrix S
       MatrixXd S = MatrixXd(n_z_, n_z_);
@@ -379,10 +410,12 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
               0, 0, std_radrd_ * std_radrd_;
       S = S + R;
 
-      // Update Radar
+    // end predict radar
 
+      // Update State, move into a separate method
+      // void UKF::UpdateState(VectorXd* x_out, MatrixXd* P_out)
       // Lesson 8, section 30: UKF Update Assignment 2
-
+      // add example values
       // create matrix for cross correlation Tc
       MatrixXd Tc = MatrixXd(n_x_, n_z_);
 
@@ -411,10 +444,9 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 
       // create example vector for incoming radar measurement
       VectorXd z = VectorXd(n_z_);
-      z <<
-              5.9214,
-              0.2187,
-              2.0062;
+      z <<  5.9214, 0.2187, 2.0062;
+
+
       // residual
       VectorXd z_diff = z - z_pred;
 
@@ -425,5 +457,6 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
       // update state mean and covariance matrix
       x_ = x_ + K * z_diff;
       P_ = P_ - K * S * K.transpose();
+
+    cout << "update radar";
   }
-}

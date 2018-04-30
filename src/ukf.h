@@ -24,7 +24,7 @@ public:
 
   ///* state vector: [pos1 pos2 vel_abs yaw_angle yaw_rate] in SI units and rad
   VectorXd x_;
-  //x_ = VectorXd(5);
+
 
   ///* state covariance matrix
   MatrixXd P_;
@@ -52,25 +52,25 @@ public:
   double std_radr_ = 0.3;
 
   ///* Radar measurement noise standard deviation angle in rad
-  double std_radphi_ = 0.03;
+  double std_radphi_ = 0.0175;
 
   ///* Radar measurement noise standard deviation radius change in m/s
-  double std_radrd_  = 0.3;
+  double std_radrd_  = 0.1;
 
   ///* Weights of sigma points
   VectorXd weights_;
 
   ///* State dimension
-  int n_x_ = 5;
+  int n_x_;
 
   ///* Augmented state dimension
-  int n_aug_ = 7;
+  int n_aug_=7;
 
   // set measurement dimension, radar can measure r, phi and r_dot
   int n_z_ = 3;
 
   ///* Sigma point spreading parameter
-  double lambda_ = 3 - n_aug_;
+  double lambda;
 
   // create augmented mean vector
   VectorXd x_aug = VectorXd(7, 7);
