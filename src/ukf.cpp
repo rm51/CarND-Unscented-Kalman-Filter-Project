@@ -13,6 +13,8 @@ using std::vector;
  */
 UKF::UKF() {
 
+   cout << "inside initialization" << endl;
+
   // if this is false, laser measurements will be ignored (except during init)
   use_laser_ = true;
 
@@ -43,10 +45,12 @@ UKF::UKF() {
    time_us_ = 0;
 
   // Process noise standard deviation longitudinal acceleration in m/s^2
+  // change this
   std_a_ = 30;
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = 30;
+  // change this
+    std_yawdd_ = 30;
 
 
    // Change these back to their original values
@@ -69,6 +73,13 @@ UKF::UKF() {
 
 }
 
+/**
+ * TODO Store Laser and Radar NIS, modify std_a and std_yawdd, currently too high
+ * Update step for LIdar -- predict measurement, update state
+ *
+ *
+ */
+
 UKF::~UKF() {}
 
 /**
@@ -82,6 +93,8 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   Complete this function! Make sure you switch between lidar and radar
   measurements.
   */
+
+    cout << "Inside ProcessMeasurement" << endl;
 
   // Initialization structure similar to EKF project
 
@@ -123,6 +136,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       x_(1) = meas_package.raw_measurements_[1]; // y
       x_(2) = 0;
       x_(3) = 0;
+      x_(4) = 0;
   }
 
   // Initialize anything else here (e.g. P_, anything else needed)
@@ -135,6 +149,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 
   float delta_t = (meas_package.timestamp_ - time_us_)/1000000.0;
   Prediction(delta_t);
+
 
   if (meas_package.sensor_type_ == MeasurementPackage::LASER){
     UpdateLidar(meas_package);
@@ -165,7 +180,8 @@ void UKF::Prediction(double delta_t) {
   // Lesson 7, section 18: Augmentation Assignment 2
 
 
-
+   // create sigma point matrix
+    MatrixXd Xsig = MatrixXd(n_x_, 2 *n_x_+1);
   // create example matrix with predicted sigma points
 
 
@@ -173,8 +189,44 @@ void UKF::Prediction(double delta_t) {
      // = augmented state
   // Xsig_pred = Xsig_aug
 
-    // create sigman point matrix
-    MatrixXd Xsig_pred = MatrixXd(n_x_, 2 *n_aug_+1);
+
+    // set example state
+
+    VectorXd x = VectorXd(n_x_);
+
+    x <<   5.7441,
+            1.3800,
+            2.2049,
+            0.5015,
+            0.3528;
+
+    //set example covariance matrix
+    MatrixXd P = MatrixXd(n_x_, n_x_);
+    P <<     0.0043,   -0.0013,    0.0030,   -0.0022,   -0.0020,
+            -0.0013,    0.0077,    0.0011,    0.0071,    0.0060,
+            0.0030,    0.0011,    0.0054,    0.0007,    0.0008,
+            -0.0022,    0.0071,    0.0007,    0.0098,    0.0100,
+            -0.0020,    0.0060,    0.0008,    0.0100,    0.0123;
+
+    // create sigma point matrix
+    MatrixXd Xsig_pred = MatrixXd(n_aug_, 2 *n_aug_+1);
+
+    // calculate square root of P
+    MatrixXd A = P_.llt().matrixL();
+
+    //set first column of sigma point matrix
+    Xsig.col(0)  = x;
+
+    //set remaining sigma points
+    for (int i = 0; i < n_x_; i++)
+    {
+        Xsig.col(i+1)     = x + sqrt(lambda+n_x_) * A.col(i);
+        Xsig.col(i+1+n_x_) = x - sqrt(lambda+n_x_) * A.col(i);
+    }
+
+    /// end generate sigma points
+
+
     // maybe need to change these values, create different values for each method
     Xsig_pred <<
               5.9374,  6.0640,   5.925,  5.9436,  5.9266,  5.9374,  5.9389,  5.9374,  5.8106,  5.9457,  5.9310,  5.9465,  5.9374,  5.9359,  5.93744,
@@ -311,6 +363,8 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
 
   // The mapping from state space to Lidar is linear. Fill this out with
   // appropriate update steps
+
+  // Fix this part ****
 
     if (!is_initialized_){
         cout << "Kalman Filter Initialization" << endl;
