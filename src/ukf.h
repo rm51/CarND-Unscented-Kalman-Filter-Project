@@ -72,8 +72,9 @@ public:
   ///* Sigma point spreading parameter
   double lambda;
 
-  // create augmented mean vector
-  VectorXd x_aug = VectorXd(7, 7);
+  // Should this be a vector or matrix
+    // create augmented mean vector
+  VectorXd x_aug = VectorXd(7);
 
   // create augmented state covariance
   MatrixXd P_aug = MatrixXd(7, 7);

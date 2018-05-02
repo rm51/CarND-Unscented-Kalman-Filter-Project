@@ -99,6 +99,8 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   // Initialization structure similar to EKF project
 
   if (!is_initialized_){
+
+      cout << "!is_initialized_" << endl;
     // Initialize (state) x_, P_, previous_time, anything else needed
 
       x_ <<   5.7441,
@@ -122,21 +124,15 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
           float psi = meas_package.raw_measurements_[1];
           float ro_dot = meas_package.raw_measurements_[2];
 
-          x_(0) = ro * cos(psi);
-          x_(1) = ro * sin(psi);
-          x_(2) = ro_dot;
-          x_(3) = psi;
-          x_(4) = 0;
+
+          x_ << ro * cos(psi), ro * sin(psi), ro_dot, psi, 0;
 
       }
 
   else if (meas_package.sensor_type_ == MeasurementPackage::LASER){
     // Initialize here
-      x_(0) = meas_package.raw_measurements_[0]; // x
-      x_(1) = meas_package.raw_measurements_[1]; // y
-      x_(2) = 0;
-      x_(3) = 0;
-      x_(4) = 0;
+
+      x_ <<  meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 0, 0, 0;
   }
 
   // Initialize anything else here (e.g. P_, anything else needed)
@@ -227,13 +223,6 @@ void UKF::Prediction(double delta_t) {
     /// end generate sigma points
 
 
-    // maybe need to change these values, create different values for each method
-    Xsig_pred <<
-              5.9374,  6.0640,   5.925,  5.9436,  5.9266,  5.9374,  5.9389,  5.9374,  5.8106,  5.9457,  5.9310,  5.9465,  5.9374,  5.9359,  5.93744,
-            1.48,  1.4436,   1.660,  1.4934,  1.5036,    1.48,  1.4868,    1.48,  1.5271,  1.3104,  1.4787,  1.4674,    1.48,  1.4851,    1.486,
-            2.204,  2.2841,  2.2455,  2.2958,   2.204,   2.204,  2.2395,   2.204,  2.1256,  2.1642,  2.1139,   2.204,   2.204,  2.1702,   2.2049,
-            0.5367, 0.47338, 0.67809, 0.55455, 0.64364, 0.54337,  0.5367, 0.53851, 0.60017, 0.39546, 0.51900, 0.42991, 0.530188,  0.5367, 0.535048,
-            0.352, 0.29997, 0.46212, 0.37633,  0.4841, 0.41872,   0.352, 0.38744, 0.40562, 0.24347, 0.32926,  0.2214, 0.28687,   0.352, 0.318159;
 
     // create augmented mean state
   x_aug.head(5) = x_;
@@ -313,6 +302,20 @@ void UKF::Prediction(double delta_t) {
     // Move into new method void UKF::PredictMeanAndCovariance(VectorXd* x_out, MatrixXd* P_out)
     // Predict mean and covariance
 
+    // maybe need to change these values, create different values for each method
+
+    //create example matrix with predicted sigma points
+    Xsig_pred = MatrixXd(n_x_, 2 * n_aug_ + 1);
+    Xsig_pred <<
+              5.9374,  6.0640,   5.925,  5.9436,  5.9266,  5.9374,  5.9389,  5.9374,  5.8106,  5.9457,  5.9310,  5.9465,  5.9374,  5.9359,  5.93744,
+            1.48,  1.4436,   1.660,  1.4934,  1.5036,    1.48,  1.4868,    1.48,  1.5271,  1.3104,  1.4787,  1.4674,    1.48,  1.4851,    1.486,
+            2.204,  2.2841,  2.2455,  2.2958,   2.204,   2.204,  2.2395,   2.204,  2.1256,  2.1642,  2.1139,   2.204,   2.204,  2.1702,   2.2049,
+            0.5367, 0.47338, 0.67809, 0.55455, 0.64364, 0.54337,  0.5367, 0.53851, 0.60017, 0.39546, 0.51900, 0.42991, 0.530188,  0.5367, 0.535048,
+            0.352, 0.29997, 0.46212, 0.37633,  0.4841, 0.41872,   0.352, 0.38744, 0.40562, 0.24347, 0.32926,  0.2214, 0.28687,   0.352, 0.318159;
+
+    //create vector for weights
+    VectorXd weights = VectorXd(2*n_aug_+1);
+
     // Lesson 8, 24
     // set weights
     double weight_0 = lambda/(lambda+n_aug_);
@@ -325,7 +328,7 @@ void UKF::Prediction(double delta_t) {
     // predicted state mean
     x_.fill(0.0);
     for (int i = 0; i < 2 * n_aug_ + 1; i++) { // iterate over sigma points
-      x_ = x_ + weights(i) * Xsig_pred.col(i);
+      x_ = x_ + weights[i] * Xsig_pred.col(i);
     }
 
     // predicted state covariance matrix
