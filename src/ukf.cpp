@@ -94,13 +94,12 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   measurements.
   */
 
-    cout << "Inside ProcessMeasurement" << endl;
 
   // Initialization structure similar to EKF project
 
   if (!is_initialized_){
 
-      cout << "!is_initialized_" << endl;
+
     // Initialize (state) x_, P_, previous_time, anything else needed
 
       x_ <<   5.7441,
@@ -155,7 +154,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
   }
   time_us_ = meas_package.timestamp_;
 
-    cout << "after process measurement";
+
 }
 
 /**
@@ -225,13 +224,23 @@ void UKF::Prediction(double delta_t) {
 
 
     // create augmented mean state
-  x_aug.head(5) = x_;
+
+    VectorXd x_aug = VectorXd(7);
+
+    //create augmented state covariance
+    MatrixXd P_aug = MatrixXd(7, 7);
+
+    //create sigma point matrix
+    MatrixXd Xsig_aug = MatrixXd(n_aug_, 2 * n_aug_ + 1);
+
+
+    x_aug.head(5) = x_;
   x_aug(5) = 0;
   x_aug(6) = 0;
 
   // create augmented covariance matrix
   P_aug.fill(0.0);
-  P_aug.topLeftCorner(5,5) = P_;
+  P_aug.topLeftCorner(5,5) = P;
   P_aug(5,5) = std_a_*std_a_;
   P_aug(6,6) = std_yawdd_*std_yawdd_;
 
@@ -345,7 +354,6 @@ void UKF::Prediction(double delta_t) {
 
     // end void UKF::PredictMeanAndCovariance(VectorXd* x_out, MatrixXd* P_out)
 
-    cout << "after prediction";
 }
 
 /**
@@ -370,7 +378,7 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
   // Fix this part ****
 
     if (!is_initialized_){
-        cout << "Kalman Filter Initialization" << endl;
+
 
         // set the state with the intial location and zero velocity
         x_ << meas_package.raw_measurements_[0], meas_package.raw_measurements_[1], 0,0;
@@ -381,7 +389,7 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
 
     }
 
-    cout << "update lidar";
+
 }
 
 /**
@@ -515,5 +523,6 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
       x_ = x_ + K * z_diff;
       P_ = P_ - K * S * K.transpose();
 
-    cout << "update radar";
+
+
   }
