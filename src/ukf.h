@@ -72,7 +72,7 @@ public:
   ///* Sigma point spreading parameter
   double lambda;
 
-  // Should this be a vector or matrix
+
     // create augmented mean vector
   VectorXd x_aug = VectorXd(7);
 

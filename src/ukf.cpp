@@ -223,16 +223,6 @@ void UKF::Prediction(double delta_t) {
 
 
 
-    // create augmented mean state
-
-    VectorXd x_aug = VectorXd(7);
-
-    //create augmented state covariance
-    MatrixXd P_aug = MatrixXd(7, 7);
-
-    //create sigma point matrix
-    MatrixXd Xsig_aug = MatrixXd(n_aug_, 2 * n_aug_ + 1);
-
 
     x_aug.head(5) = x_;
   x_aug(5) = 0;
@@ -262,8 +252,20 @@ void UKF::Prediction(double delta_t) {
   // Predict Sigma Points
 
   // Lesson 7, section 21 Sigma Point Prediction Assignment 2
-
+  // predicted state will have 5 rows and fifteen columns
+  // augmented state will have 7 rows and 15 columns
   // predict sigma points
+
+    //create example sigma point matrix
+   // MatrixXd Xsig_aug = MatrixXd(n_aug_, 2 * n_aug_ + 1);
+    Xsig_aug <<
+             5.7441,  5.85768,   5.7441,   5.7441,   5.7441,   5.7441,   5.7441,   5.7441,   5.63052,   5.7441,   5.7441,   5.7441,   5.7441,   5.7441,   5.7441,
+            1.38,  1.34566,  1.52806,     1.38,     1.38,     1.38,     1.38,     1.38,   1.41434,  1.23194,     1.38,     1.38,     1.38,     1.38,     1.38,
+            2.2049,  2.28414,  2.24557,  2.29582,   2.2049,   2.2049,   2.2049,   2.2049,   2.12566,  2.16423,  2.11398,   2.2049,   2.2049,   2.2049,   2.2049,
+            0.5015,  0.44339, 0.631886, 0.516923, 0.595227,   0.5015,   0.5015,   0.5015,   0.55961, 0.371114, 0.486077, 0.407773,   0.5015,   0.5015,   0.5015,
+            0.3528, 0.299973, 0.462123, 0.376339,  0.48417, 0.418721,   0.3528,   0.3528,  0.405627, 0.243477, 0.329261,  0.22143, 0.286879,   0.3528,   0.3528,
+            0,        0,        0,        0,        0,        0,  0.34641,        0,         0,        0,        0,        0,        0, -0.34641,        0,
+            0,        0,        0,        0,        0,        0,        0,  0.34641,         0,        0,        0,        0,        0,        0, -0.34641;
 
   for (int i = 0; i < 2*n_aug_+1; i++){
     // extract values for better readability
